@@ -1,3 +1,5 @@
+// calculator.c - Executing calculator functions
+
 #include <stdio.h>
 
 #include "calc_funcs.h"

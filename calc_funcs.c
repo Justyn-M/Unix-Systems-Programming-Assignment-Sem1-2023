@@ -1,3 +1,5 @@
+// calc_funcs.c - calculator functions
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,7 +35,7 @@ void getFiles()
         {
             if (strstr(dir-> d_name, ".usp"))
             {
-                files[count] = strdup(dir-> d_name); // might have to use strdup(dir->dirname)
+                files[count] = strdup(dir-> d_name);
                 // pipe error check
                 if (pipe(file_descripter + 2 * count) < 0)
                 {
@@ -49,14 +51,14 @@ void getFiles()
     }
 }
 
-// Funciton for reading lines of .usp files
+// Function for reading lines of .usp files
 // Used most in calculator function
 void read_line(int file_descripter, char* buffer, int line_length)
 {
     int i = 0;
     char c;
 
-// while loop will read read the opened file and store the first line into a buffer
+// while loop will read the opened file and store the first line into a buffer
     while (i < line_length - 1 && read(file_descripter, &c, 1) > 0)
     {
         // if a read character is on a new line, break loop
@@ -75,11 +77,11 @@ void calculator(int file, int i)
 {
     char math_operation[2], line[LINE_LENGTH], result[LINE_LENGTH];
     int _result;
-    int num1, num2; // for 2 numbers that ned to be read 
+    int num1, num2; // for 2 numbers that need to be read 
 
     // read ID which is the first line of .usp files
     read_line(file, line, LINE_LENGTH);
-    // write it to pipes
+    // write it to pipe
     write(file_descripter[2 * i + 1], line, strlen(line) + 1);
     write(file_descripter[2 * i + 1], "\n", 1);
 
@@ -122,7 +124,7 @@ void calculator(int file, int i)
     write(file_descripter[2 * i + 1], "\n", 1);
 }
 
-// Function that creates parent and child processes and passes the files from 
+// Function that creates child processes and passes the files from 
 // parent to child. Child processes will run calculation function here.
 void create_child_processes()
 {
@@ -143,7 +145,7 @@ void create_child_processes()
             // for each of the child processes, 
             for (int c = 0; c < 2 * count; c++)
             {
-                if (c != 2 * i + 1) // maybe c != 2 * i && c != 2 * i + 1
+                if (c != 2 * i && c != 2 * i + 1)
                 {
                     close(file_descripter[c]);
                 }
@@ -196,7 +198,7 @@ void get_results()
 
     for (int i = 0; i < count; i++)
     {
-        // wait for the child processes to finis
+        // wait for the child processes to finish
         wait(NULL);
     }
 }

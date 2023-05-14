@@ -1,0 +1,12 @@
+## Running the program
+
+To run the program:
+
+1) Delete all data in result.txt or delete that whole file.
+
+2) Open terminal and type make
+
+3) Type ./calculator
+
+4) If intending to do another run of calculator, repeat step 1 and 3
+
