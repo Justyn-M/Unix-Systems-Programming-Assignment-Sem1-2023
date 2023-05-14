@@ -90,18 +90,134 @@ void create_child_processes()
     }
 }
 
+// Funciton for reading lines of .usp files
+// Used most in calculator function
+void read_line(int file_descripter, char* buffer, int line_length)
+{
+    int i = 0;
+    char c;
+
+// while loop will read read the opened file and store the first line into a buffer
+    while (i < line_length - 1 && read(file_descripter, &c, 1) > 0)
+    {
+        // if a read character is on a new line, break loop
+        if (c == '\n')
+        {
+            break;
+        }
+        buffer[i++] = c;
+    }
+    // buffer null terminator
+    buffer[i] = '\0';
+}
+
+// Calculator function
+void calculator(int file, int i)
+{
+    char math_operation[2], line[LINE_LENGTH], result[LINE_LENGTH];
+    int _result;
+    int num1, num2; // for 2 numbers that ned to be read 
+
+    // read ID which is the first line of .usp files
+    read_line(file, line, LINE_LENGTH);
+    // write it to pipes
+    write(file_descripter[2 * i + 1], line, strlen(line) + 1);
+    write(file_descripter[2 * i + 1], "\n", 1);
+
+    //read 2nd line which is the first num
+    read_line(file, line, LINE_LENGTH);
+    num1 = atoi(line);
+
+    //read 3rd line which is the mathematical operator
+    read_line(file, line, LINE_LENGTH);
+    strcpy(math_operation, line);
+
+    // read 4th line which is 2nd num
+    read_line(file, line, LINE_LENGTH);
+    num2 = atoi(line);
+
+    // Do the calculation
+    switch(math_operation[0])
+    {
+        if (math_operation[0] == '+')
+        {
+            _result = num1 + num2;
+        }
+        else if (math_operation[0] == '-')
+        {
+            _result = num1 - num2;
+        }
+        else if (math_operation[0] == '*')
+        {
+            _result = num1 * num2;
+        }
+        else if (math_operation[0] == '/')
+        {
+            _result = num1 / num2;
+        }
+        else // error check for math_operation
+        {
+            perror("Math Operation Encountered is not Available");
+            free(files[i]);
+            exit(1);
+        }
+    }
+    sprintf(result, "%d", _result);
+
+    // writing results to the pipe
+    write(file_descripter[2 * i + 1], result, strlen(result) + 1);
+    write(file_descripter[2 * i + 1], "\n", 1);
+}
+
 // Function that waits for child proccess to finish then gets the calculated results
 void get_results()
 {
     // wait 2 seconds for children to finish
     sleep(2);
     
+    // integer that is the result that will be written to result.txt
     int write_results = open("result.txt", O_WRONLY | O_APPEND | O_CREAT, 0644);
     for (int i = 0; i < count; i++)
     {
         char buffer[LINE_LENGTH];
 
         // read the firt line of the .usp file from the pipe then write the result to txt file
-        read_line(file, line, LINE_LENGTH);
+        read_line(file_descripter[2 * i], buffer, LINE_LENGTH);
+        // write to result.txt
+        write(write_results, buffer, strlen(buffer));
+        // space between ID and result of that ID's USP file's calculation
+        write(write_results, " ", 1);
+
+        // Read the calculated result
+        read_line(file_descripter[2 * i], buffer, LINE_LENGTH);
+        // writing to txt file
+        write(write_results, buffer, strlen(buffer));
+        write(write_results, "\n", 1);
+
+        // close pipe
+        close(file_descripter[2 * 1]);
     }
+    // close result.txt file
+    close(write_results);
+
+    for (int i = 0; i < count; i++)
+    {
+        // wait for the child processes to finis
+        wait(NULL);
+    }
+}
+
+// == Executing functions == //
+void calculater_executer()
+{
+    getFiles();
+    create_child_processes();
+    get_results();
+}
+
+// == Main function == //
+int main()
+{
+    calculater_executer();
+    return 0;
 }
